@@ -5,19 +5,31 @@ date: 2018-03-07 19:30:10
 tags: iOS, Test, UITest, XCTest, WebDriverAgent, WDA
 ---
 
-XcodeはUnitTestをサポートするため`XCTest`というFrameworkを提供してる。
-余計なことを言うが、iOSのRuntime Frameworkではない、XcodeのTest Build時のFrameworkだ。
-Xcode6まではbackground methodのtestだけだったが、Xcode7からUIの自動操作によってtestもできるようになった。
-Xcodeに統合されているから_File->New UI Test Case_で簡単に作れるし、且つ動作の録画機能もある。
-滅多にTestソース書かず、一回だけ手動でやればscriptが自動生成されるので、
-世の中ほとんどのアプリが十分楽にtestできると思う。
+## XCTestの歴史
+XcodeはUnit Testをサポートするため`XCTest`というFrameworkを提供してる。
+余計なことを言うが、iPhoneに存在するiOS Frameworkではないので、Test BuildとTest時に使われるのFrameworkだ。
+
+* XCTest
+
+  Xcode5、6までのbackground method用のFramework
+
+* UIAutomation
+
+  Xcodeの拡張developer tool、javascriptを使う。Accessibility Frameworkと一緒に使って画面のelementを検索できる。
+
+* XCUITest
+
+  Xcode7からXCTestとUIAutomationを統合したFrameworkが、Accessibility使わなくてもできる。Objective-CとSwiftで書ける。
+
+XCUITestがXcodeに統合されているから_File->New UI Test Case_で簡単に作れるし、且つ動作の録画機能もある。
+滅多にTestソース書かず、一回だけ手動でやればscriptが自動生成されるので、世の中ほとんどのアプリが十分楽にtestできると思う。
 
 私の場合はちょっと複雑な状況だった。
-test target appの画面から一度外に出ることがあって、手動で戻さないとtestが続かないから、完全な自動化と言えない。
+testの途中にtest target appの画面から何度も外に出ることがあって、手動で戻させないとtestが続かないから、完全な自動化と言えない。
 この問題を解決するため、Facebookの[WebDriverAgent](https://github.com/facebook/WebDriverAgent)を借りることとなった。
 
 ---
-## Xcode XCTestの一般的な使い方
+## Xcode XCTestの使い方
 
 ### 準備
 Xcode projectを新規作成する時、案内画面の下に`Include Unit Tests`と`Include UI Tests`のcheckboxがあります。checkを入れると、Testに必要なBundle Build Targetが自動生成される。
@@ -56,8 +68,9 @@ UI操作と画面のtestしたい
 ![source file](ios-ui-test/img-0303-source.png)
 * `test`の文字で始まる空のmethodを追加し、括弧の中にクリックして編集のcursorをmethod内にすれば、編集windowの下にdisable状態だった赤いbuttonがenableに変わる。それは録画buttonだ。
 ![record button](ios-ui-test/img-0304-record.png)
-* 録画buttonをクリックしてたら、test target appが起動され、test手順を踏まえてappを操作すれば、なんと空だったmethodの中にtestのscriptが自動生成される。
+* 録画buttonをクリックしてたら、test target appが起動され、test手順を踏まえてappを操作すれば、methodの中にtestのscriptが自動生成される。
 * 再度録画buttonをクリックすると録画終了となる。test結果の比較処理を追加すればtest methodも追加完成する。
+* それからtest実行すると、xxTest-Runner見たいなアプリがインストールし、起動され、その後target appに切り替す。
 
 ---
 
@@ -71,11 +84,24 @@ Appiumを深く調べれば、本当にAppium iOS testを支えっているの�
 名前の文字通り、WebからiOS端末を駆動できるagentです。
 素晴らしいが、恐しい！iPhoneがハッキングされてるじゃないか？初めてiPhoneが勝手に動く動画を見た時私もそう思った。
 
+WDAのオーブンソースを読むと、大きい三つの部分に分けられる。
+1. HTTP Server
+
+  Cartfileから、外部ライブラリ`github "marekcirkos/RoutingHTTPServer"`が使われてることが分かる。
+
+2. endpoint API
+
+  URLを解析してnative APIに振り分ける
+
+3. XCTest native API
+
+  コアな部分、test target Appを人形のように操る
+
 ### Architecture
 remote controlの流れ
 ![architecture](ios-ui-test/img-0401-arch.png)
 * remote PCからWDAのRunner AppにHTTP requestを送る
-* WDAのRunner AppがXCTestのAPI(ほぼPrivate API)を呼ぶ
+* WDAのRunner AppがXCTestのnative APIを呼ぶ
 * XCTest APIがtarget Appを操作
 
 
@@ -89,10 +115,10 @@ __一部API__：
 |endpoint|説明|
 |:---|:---|
 |`session`|接続情報|
-|`inspector`|端末画面情報|
+|`inspector`|端末画面詳細|
 |`source`|画面elements TreeのJSON|
-|`session`/:sessionId/elements|element検索|
-|`element/:elementId/elements`|subelement検索|
+|`session/:sessionId/elements`|element検索|
+|`element/:elementId/elements`|sub-element検索|
 |`element/:elementId/click`|elementをクリック|
 |...|...|
 
@@ -102,12 +128,64 @@ Browserでinspectorのendpointを送信すると、inspector画面が表示さ�
 
 ---
 
-## 改造
-私WDAたくさんのAPIを覚えてscriptを書くことをやりたくないと思う。Xcodeの録画機能があんなに便利且つ簡単なのに捨てることが勿体ない。
-WDAの根本はHTTP Serverではない、XCTest APIを操作する部分だ。この部分だけを使って自分のTest-Runner-Appを作ることにした。
+## WDAの違う使い方
+Xcodeの録画機能は本当に便利且つ簡単で好きな機能だから、WDAのHTTP APIのため録画機能を捨てることが勿体ないなと思う。
+実際HTTP Serverを起動せず、native APIの部分だけを使うもできる。
 
-### XCTest Private API
+### 準備
+極めて簡単、WDAのFrameworkをtest build targetに追加して、
+Objective-CとSwiftで普通のFrameworkとして使えばいい。
+
+後はいくつのAPIを覚えよう。
+
+### Public API
+XCTest Header filesに公開されているAPI。基本な検索と操作をサポートしている。
+
+0. `XCUIApplication`
+
+  test target appのinstanceを返す。
+
+0. `XCUIApplication.init(bundleIdentifier: "com.apple.mobilesafari")`
+
+  bundle IDを指定して任意のappのinstanceを返す。例はSafariを返す。
+
+0. `buttons`
+
+  sub-elementからbuttonを全部検索して返す。
+
+0. `staticTexts`
+
+  sub-elementから同じtextあるelementを検索して返す。例: `app.staticTexts["send event button"]`
+
+0. `tap`
+
+  elementのtap eventを発信する
+
+> [API reference](https://developer.apple.com/documentation/xctest/user_interface_tests?language=objc)
+
+### Private API
+WDAが公開されたXCTestのHeader fileに満足できず、binary libraryから使われてるobjectとmethod symbolをdumpして、使えそうな隠しAPIを洗い出した。更にそのPrivate APIを利用して便利なAPIを増やした。
+
+0. `FBApplication.fb_active`
+
+  現在activeしているappのinstanceを返す。
+
+0. `fb_waitUntilSnapshotIsStable`
+
+  画面表示が安定しているかの判定。
+
+0. `fb_screenshotWithError`
+
+  スクリーンショット画像を返す。
 
 ### life show
+
+## ios-deploy
+まだ完全な自動ではない。
+コマンドラインからxcodebuildを実行すればappやtest appが自動でinstallまた実行されるが、appを削除するために[ios-deploy](https://github.com/phonegap/ios-deploy)を借りた。
+
+* bundleIdentifier指定app削除
+
+  `ios-deploy -9 -1 <bundleIdentifier>`
 
 ## iOS beta test
