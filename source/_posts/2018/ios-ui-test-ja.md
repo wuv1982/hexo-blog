@@ -199,17 +199,19 @@ WDAが公開されたXCTestのHeader fileに満足できず、binary libraryか�
 * [libimobiledevice](https://github.com/libimobiledevice/libimobiledevice)
 
 ## iOS beta test
-iOS betaを使いためよく`xcode-select`を勧められたが、使い終わった後もう一回`xcode-select`で戻らなければならない、非常に面倒臭い。
+iOS betaを使いためよく`xcode-select`を勧められるが、使い終わった後もう一回`xcode-select`で普通バージョンに戻らなければならないから非常に面倒臭い。
 
-xcode-selectのmanを見ると実際は環境変数DEVELOPER_DIRを変更したにすぎないため、
+`xcode-select`のmanual docを見ると実際は環境変数DEVELOPER_DIRを変更したにすぎないため、
 terminalで手動でDEVELOPER_DIRを変更することもできる。
-`export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer`
-そうするとxcodeバージョンの切り替えはterminalのsession以外に影響持たない。terminalを閉じればいい、設定を戻る必要がない。
+```
+export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer`
+```
+そうするとxcodeバージョンの切り替えはterminalのsession以外に影響持たない、設定を戻る必要がない。
 
 ## Swift Script
-shell scriptで複雑なtest caseを管理するには抵抗がある。実際実行環境に必ずSwiftがinstallされているので、Swiftでscriptを作成してもいいと思う。
+shell scriptで複雑なtest caseを管理するには抵抗がある。実際実行環境に必ずSwiftがinstallされているので、Swiftでscript言語としても向いている。
 rubyや、pythonと同じ、`Swift main.swift`でプログラムがすぐ実行できる。
-またScalaのProcess Classの真似でStringの拡張メソットを作れば更に便利になる。
+またScalaの`Process`Classの真似でStringの拡張メソットを作れば更に便利になる。
 ```Swift
 // Stringをcommandに変換
 extension String {
