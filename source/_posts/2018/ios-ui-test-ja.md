@@ -126,40 +126,45 @@ __一部API__：
 Browserでinspectorのendpointを送信すると、inspector画面が表示される。また端末のスクリーンコピーからelement treeを参照し、elementをクリックしたりできる。
 ![inspector](ios-ui-test/img-0402-inspector.png)
 
+__Tips__
+> WIFIは便利ですけど、WIFIない時にUSB経由したい場合以下のツールが使えそうになる。
+* [mobiledevice](https://github.com/imkira/mobiledevice)
+* [usbmuxd](https://github.com/libimobiledevice/usbmuxd)
+
 ---
 
 ## WDAの違う使い方
-Xcodeの録画機能は本当に便利且つ簡単で好きな機能だから、WDAのHTTP APIのため録画機能を捨てることが勿体ないなと思う。
-実際HTTP Serverを起動せず、native APIの部分だけを使うもできる。
+cross platformではないし、remote操作も要らないから必ずWDAのHTTP Serverを使うことがない。WDAはXCTestのPrivate APIを整理して公開しているから、標準にない機能が使えるのがもう一つのメリットだ。
 
-### 準備
-極めて簡単、WDAのFrameworkをtest build targetに追加して、
-Objective-CとSwiftで普通のFrameworkとして使えばいい。
+WDAのFrameworkをtest build targetに追加して、XCTest APIと一緒にObjective-C或いはSwiftでtest caseを書くと、private APIと便利な録画機能両方のメリットが受けられる。
 
-後はいくつのAPIを覚えよう。
+いくつのAPIを覚えよう。
 
 ### Public API
 XCTest Header filesに公開されているAPI。基本な検索と操作をサポートしている。
 
-0. `XCUIApplication`
+例:
+0. `let app = XCUIApplication()`
 
   test target appのinstanceを返す。
 
-0. `XCUIApplication.init(bundleIdentifier: "com.apple.mobilesafari")`
+0. `app.launch()`
+  appを起動させる。
 
-  bundle IDを指定して任意のappのinstanceを返す。例はSafariを返す。
+0. `let safari = XCUIApplication.init(bundleIdentifier: "com.apple.mobilesafari")`
 
-0. `buttons`
+  SafariのbundleIdentifierを指定してをSafariのinstanceを返す。
 
-  sub-elementからbuttonを全部検索して返す。
+0. `app.tables.staticTexts["normal event"].tap()`
 
-0. `staticTexts`
+  listから"normal event"の行をtapする。
 
-  sub-elementから同じtextあるelementを検索して返す。例: `app.staticTexts["send event button"]`
+0. `app.sheets.buttons["IDをリセット"].tap()`
 
-0. `tap`
+  "IDをリセット"のbuttonをtapする。
 
-  elementのtap eventを発信する
+0. `app.terminate()`
+  appを停止させる。
 
 > [API reference](https://developer.apple.com/documentation/xctest/user_interface_tests?language=objc)
 
@@ -174,18 +179,54 @@ WDAが公開されたXCTestのHeader fileに満足できず、binary libraryか�
 
   画面表示が安定しているかの判定。
 
-0. `fb_screenshotWithError`
-
-  スクリーンショット画像を返す。
 
 ### life show
 
-## ios-deploy
-まだ完全な自動ではない。
-コマンドラインからxcodebuildを実行すればappやtest appが自動でinstallまた実行されるが、appを削除するために[ios-deploy](https://github.com/phonegap/ios-deploy)を借りた。
+## 残タスク
+まだまだ完全な自動操作ではない。
+コマンドラインからxcodebuildを実行すればappやtest appが自動でinstallまた実行されるが、appを削除するために別のツールが必要となる。
 
-* bundleIdentifier指定app削除
+* [ios-deploy](https://github.com/phonegap/ios-deploy)
 
-  `ios-deploy -9 -1 <bundleIdentifier>`
+  ```
+  # device ID listを出力
+  ios-deploy -c
+
+  # bundleIdentifier指定app削除
+  ios-deploy -9 -1 <bundleIdentifier>
+  ```
+
+* [libimobiledevice](https://github.com/libimobiledevice/libimobiledevice)
 
 ## iOS beta test
+iOS betaを使いためよく`xcode-select`を勧められたが、使い終わった後もう一回`xcode-select`で戻らなければならない、非常に面倒臭い。
+
+xcode-selectのmanを見ると実際は環境変数DEVELOPER_DIRを変更したにすぎないため、
+terminalで手動でDEVELOPER_DIRを変更することもできる。
+`export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer`
+そうするとxcodeバージョンの切り替えはterminalのsession以外に影響持たない。terminalを閉じればいい、設定を戻る必要がない。
+
+## Swift Script
+shell scriptで複雑なtest caseを管理するには抵抗がある。実際実行環境に必ずSwiftがinstallされているので、Swiftでscriptを作成してもいいと思う。
+rubyや、pythonと同じ、`Swift main.swift`でプログラムがすぐ実行できる。
+またScalaのProcess Classの真似でStringの拡張メソットを作れば更に便利になる。
+```Swift
+// Stringをcommandに変換
+extension String {
+    public func run(_ dir:String = ".") -> Int32{
+        let p = toProcess(dir: dir)
+        p.launch()
+        p.waitUntilExit()
+        return p.terminationStatus
+    }
+}
+
+// 実行例
+let cmd = "xcodebuild" +
+            " -scheme \(scheme)" +
+            " -configuration \(configuration)" +
+            " -sdk iphoneos" +
+            " -destination platform=iOS,id=\(deviceIdentifier)" +
+            " build"
+cmd.run()
+```
