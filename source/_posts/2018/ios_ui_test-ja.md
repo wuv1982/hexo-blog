@@ -145,44 +145,49 @@ cross platformではないし、remote操作も要らないから必ずWDAのHTT
 XCTest Header filesに公開されているAPI。基本な検索と操作をサポートしている。
 
 例:
-0. `let app = XCUIApplication()`
+0. test target appのinstanceを返す。
+```swift
+let app = XCUIApplication()
+```
+0. appを起動させる。
+```swift
+app.launch()
+```
+0. SafariのbundleIdentifierを指定してをSafariのinstanceを返す。
+```swift
+let safari = XCUIApplication.init(bundleIdentifier: "com.apple.mobilesafari")
+```
+0. listから"normal event"の行をtapする。
+```swift
+app.tables.staticTexts["normal event"].tap()
+```
+0. "IDをリセット"のbuttonをtapする。
+```swift
+app.sheets.buttons["IDをリセット"].tap()
+```
+0. appを停止させる。
+```swift
+app.terminate()
+```
 
-  test target appのinstanceを返す。
-
-0. `app.launch()`
-  appを起動させる。
-
-0. `let safari = XCUIApplication.init(bundleIdentifier: "com.apple.mobilesafari")`
-
-  SafariのbundleIdentifierを指定してをSafariのinstanceを返す。
-
-0. `app.tables.staticTexts["normal event"].tap()`
-
-  listから"normal event"の行をtapする。
-
-0. `app.sheets.buttons["IDをリセット"].tap()`
-
-  "IDをリセット"のbuttonをtapする。
-
-0. `app.terminate()`
-  appを停止させる。
 
 > [API reference](https://developer.apple.com/documentation/xctest/user_interface_tests?language=objc)
 
 ### Private API
 WDAが公開されたXCTestのHeader fileに満足できず、binary libraryから使われてるobjectとmethod symbolをdumpして、使えそうな隠しAPIを洗い出した。更にそのPrivate APIを利用して便利なAPIを増やした。
 
-0. `FBApplication.fb_active`
-
-  現在activeしているappのinstanceを返す。
-
-0. `fb_waitUntilSnapshotIsStable`
-
-  画面表示が安定しているかの判定。
-
-0. `element.fb_tapCoordinate(relativeCoordinate, &err)`
-
-  座標指定してtap。
+0. 現在activeしているappのinstanceを返す。
+```swift
+FBApplication.fb_active
+```
+0. 画面表示が安定しているかの判定。
+```swift
+fb_waitUntilSnapshotIsStable
+```
+0. 座標指定してtap。
+```swift
+element.fb_tapCoordinate(relativeCoordinate, &err)
+```
 
 ## 残タスク
 まだまだ完全な自動操作ではない。
@@ -190,13 +195,13 @@ WDAが公開されたXCTestのHeader fileに満足できず、binary libraryか�
 
 * [ios-deploy](https://github.com/phonegap/ios-deploy)
 
-  ```
-  # device ID listを出力
-  ios-deploy -c
+```
+# device ID listを出力
+ios-deploy -c
 
-  # bundleIdentifier指定app削除
-  ios-deploy -9 -1 <bundleIdentifier>
-  ```
+# bundleIdentifier指定app削除
+ios-deploy -9 -1 <bundleIdentifier>
+```
 
 * [libimobiledevice](https://github.com/libimobiledevice/libimobiledevice)
 
