@@ -34,24 +34,24 @@ Private APIが一杯掘り出されてる。
 
 ### 準備
 Xcode projectを新規作成する時、案内画面の下に`Include Unit Tests`と`Include UI Tests`のcheckboxがあります。checkを入れると、Testに必要なBundle Build Targetが自動生成される。
-![new project wizard](ios-ui-test/img-0101-wizard.png)
+{% asset_img img-0101-wizard.png new project wizard %}
 
 checkを忘れた場合、改めてNew Targetで`iOS Unit Testing Bundle`或いは`iOS UI Testing Bundle`を追加しなければ相応のTest Buildができない、testも当然できない。
-![new testing bundle target](ios-ui-test/img-0102-target.png)
+{% asset_img img-0102-target.png new testing bundle target %}
 
 ### Unit Test Case
 Background methodをUnit Testだけに適応
 * Targetsに`iOS Unit Testing Bundle`の存在を確認。`Host Application`の設定が特徴。
-![bundle target](ios-ui-test/img-0204-general.png)
+{% asset_img img-0204-general.png bundle target %}
 * Xcodeの`New File` 案内画面から `Unit Test Case Class`を選択し、test source の file名と言語を決める。
-![new unit test](ios-ui-test/img-0201-testcase.png)
+{% asset_img img-0201-testcase.png new unit test %}
 * Test Bundle Targetにcompile対象に含まれてるかを確認
-![build phases](ios-ui-test/img-0202-buildphases.png)
+{% asset_img img-0202-buildphases.png build phases %}
 * 嬉しいことに見慣れた`setup`、`tearDown` methodがtemplateから自動生成されてる。初期化とリセット処理を自分で入れろう。
 * testしたい内容を`test`の文字で始まるmethodを追加したら完成です。
-![source file](ios-ui-test/img-0203-source.png)
+{% asset_img img-0203-source.png source file %}
 * Unit Test Caseを実行するにはsimulatorでなければならない。
-![run test](ios-ui-test/img-0205-test.png)
+{% asset_img img-0205-test.png run test %}
     0. 一括全部実行[`cmd + u`]
     0. file単位で実行
     0. method単位で実行
@@ -62,13 +62,13 @@ __Tips__
 ### UI Test Case
 UI操作と画面のtestしたい
 * Targetsに`iOS Unit Testing Bundle`の存在を確認。`Target Application`の設定が特徴。
-![bundle target](ios-ui-test/img-0301-general.png)
+{% asset_img img-0301-general.png bundle target %}
 * 今度Xcodeの`New File` 案内画面から 別の`UI Test Case Class`を選択し、file名を決める。
-![new ui test](ios-ui-test/img-0302-testcase.png)
+{% asset_img img-0302-testcase.png new ui test %}
 * Unit Testのtemplateとほぼ一緒、違うのは新しいAPI`XCUIApplication()`。 `XCUIApplication()`はappのinstanceを返すmethod、appはtest target appのこと、画面の各elementのroot elementでもある。
-![source file](ios-ui-test/img-0303-source.png)
+{% asset_img img-0303-source.png source file %}
 * `test`の文字で始まる空のmethodを追加し、括弧の中にクリックして編集のcursorをmethod内にすれば、編集windowの下にdisable状態だった赤いbuttonがenableに変わる。それは録画buttonだ。
-![record button](ios-ui-test/img-0304-record.png)
+{% asset_img img-0304-record.png record button %}
 * 録画buttonをクリックしてたら、test target appが起動され、test手順を踏まえてappを操作すれば、methodの中にtestのscriptが自動生成される。
 * 再度録画buttonをクリックすると録画終了となる。test結果の判定処理を追加すればtest methodが完成する。
 * それからtest実行すると、録画された動作がreplayされる。
@@ -100,7 +100,7 @@ WDAのオーブンソースを読むと、大きい三つの部分に分けら�
 
 ### Architecture
 remote controlの流れ
-![architecture](ios-ui-test/img-0401-arch.png)
+{% asset_img img-0401-arch.png architecture %}
 * remote PCからWDAのRunner AppにHTTP requestを送る
 * WDAのRunner AppがXCTestのnative APIを呼ぶ
 * XCTest APIがtarget Appを操作
@@ -125,7 +125,7 @@ __一部API__：
 
 ### Browserからremote control
 Browserでinspectorのendpointを送信すると、inspector画面が表示される。また端末のスクリーンコピーからelement treeを参照し、elementをクリックしたりできる。
-![inspector](ios-ui-test/img-0402-inspector.png)
+{% asset_img img-0402-inspector.png inspector %}
 
 __Tips__
 > WIFIは便利ですけど、WIFIない時にUSB経由したい場合以下のツールが使えそうになる。
