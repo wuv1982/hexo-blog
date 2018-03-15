@@ -5,9 +5,9 @@ date: 2018-03-07 19:30:10
 tags: iOS, Test, UITest, XCTest, WebDriverAgent, WDA
 ---
 
-## XCTestの歴史
+## XCTest
 XcodeはUnit Testをサポートするため`XCTest`というFrameworkを提供してる。
-余計なことを言うが、iPhoneに存在するiOS Frameworkではないので、Test BuildとTest時に使われるのFrameworkだ。
+余計なことを言うが、iOS Runtime Frameworkではないので、Test Buildに入れるFrameworkだ。自動操作の機能が強過ぎてアップスドアにアップできないかも。
 
 * XCTest
 
@@ -26,10 +26,11 @@ XCUITestがXcodeに統合されているから_File->New UI Test Case_で簡単�
 
 私の場合はちょっと複雑な状況だった。
 testの途中にtest target appの画面から何度も外に出ることがあって、手動で戻させないとtestが続かないから、完全な自動化と言えない。
-この問題を解決するため、Facebookの[WebDriverAgent](https://github.com/facebook/WebDriverAgent)を借りることとなった。
+標準のAPIが足りないと思えば、Facebookの[WebDriverAgent](https://github.com/facebook/WebDriverAgent)をcheckしてみて。
+Private APIが一杯掘り出されてる。
 
 ---
-## Xcode XCTestの使い方
+## Xcode XCTestの基本
 
 ### 準備
 Xcode projectを新規作成する時、案内画面の下に`Include Unit Tests`と`Include UI Tests`のcheckboxがあります。checkを入れると、Testに必要なBundle Build Targetが自動生成される。
@@ -69,8 +70,8 @@ UI操作と画面のtestしたい
 * `test`の文字で始まる空のmethodを追加し、括弧の中にクリックして編集のcursorをmethod内にすれば、編集windowの下にdisable状態だった赤いbuttonがenableに変わる。それは録画buttonだ。
 ![record button](ios-ui-test/img-0304-record.png)
 * 録画buttonをクリックしてたら、test target appが起動され、test手順を踏まえてappを操作すれば、methodの中にtestのscriptが自動生成される。
-* 再度録画buttonをクリックすると録画終了となる。test結果の比較処理を追加すればtest methodも追加完成する。
-* それからtest実行すると、xxTest-Runner見たいなアプリがインストールし、起動され、その後target appに切り替す。
+* 再度録画buttonをクリックすると録画終了となる。test結果の判定処理を追加すればtest methodが完成する。
+* それからtest実行すると、録画された動作がreplayされる。
 
 ---
 
@@ -78,7 +79,7 @@ UI操作と画面のtestしたい
 Web test界には[Selenium](https://www.seleniumhq.org/)があるように、App test界は[Appium](http://appium.io/)がある。
 Seleniumと同じjavascriptでtest scriptが作れる。
 悪くないが、Appiumはtestのcross platform方案だ。
-私は暫くiOSだけが欲しい。
+私の場合は暫くiOSだけが欲しい。
 
 Appiumを深く調べれば、本当にAppium iOS testを支えっているのは[WebDriverAgent](https://github.com/facebook/WebDriverAgent)だと見つけた。
 名前の文字通り、WebからiOS端末を駆動できるagentです。
@@ -93,9 +94,9 @@ WDAのオーブンソースを読むと、大きい三つの部分に分けら�
 
   URLを解析してnative APIに振り分ける
 
-3. XCTest native API
+3. native API
 
-  コアな部分、test target Appを人形のように操る
+  コアな部分、XCTestのPublic APIとPrivate APIを基づき使い易くにしてくれた
 
 ### Architecture
 remote controlの流れ
@@ -133,12 +134,12 @@ __Tips__
 
 ---
 
-## WDAの違う使い方
-cross platformではないし、remote操作も要らないから必ずWDAのHTTP Serverを使うことがない。WDAはXCTestのPrivate APIを整理して公開しているから、標準にない機能が使えるのがもう一つのメリットだ。
+## WDA Native API
+cross platformではないし、remote操作も要らないから必ずWDAのHTTP Serverを使うことがない。WDAはXCTestのたくさんPrivate APIを整理したことが凄く助かる。標準APIが満足できない時、助かるかもしれない。Objective-CとSwift以外のリソースも要らない。
 
-WDAのFrameworkをtest build targetに追加して、XCTest APIと一緒にObjective-C或いはSwiftでtest caseを書くと、private APIと便利な録画機能両方のメリットが受けられる。
+使い方も簡単。普通のFramework LibraryみたいWDAのFrameworkをtest build targetに追加して、XCTest APIと一緒にObjective-C或いはSwiftでtest caseを書くと、private APIと便利な録画機能両方のメリットが受けられる。
 
-いくつのAPIを覚えよう。
+後はいくつのAPIを覚えよう。
 
 ### Public API
 XCTest Header filesに公開されているAPI。基本な検索と操作をサポートしている。
@@ -179,8 +180,9 @@ WDAが公開されたXCTestのHeader fileに満足できず、binary libraryか�
 
   画面表示が安定しているかの判定。
 
+0. `element.fb_tapCoordinate(relativeCoordinate, &err)`
 
-### life show
+  座標指定してtap。
 
 ## 残タスク
 まだまだ完全な自動操作ではない。
@@ -209,9 +211,9 @@ export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer`
 そうするとxcodeバージョンの切り替えはterminalのsession以外に影響持たない、設定を戻る必要がない。
 
 ## Swift Script
-shell scriptで複雑なtest caseを管理するには抵抗がある。実際実行環境に必ずSwiftがinstallされているので、Swiftでscript言語としても向いている。
-rubyや、pythonと同じ、`Swift main.swift`でプログラムがすぐ実行できる。
-またScalaの`Process`Classの真似でStringの拡張メソットを作れば更に便利になる。
+shell scriptで複雑なtest caseを管理するには抵抗がある。実際実行環境はxcode必須だから必ずSwiftがinstallされている。
+rubyや、pythonと同じ、`Swift main.swift`でプログラムがすぐ実行できるし、script言語としても向いている。
+下はScalaの`Process`Classの真似でStringの拡張メソットを作れば更に便利になる。
 ```Swift
 // Stringをcommandに変換
 extension String {
