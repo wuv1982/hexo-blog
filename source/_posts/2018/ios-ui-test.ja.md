@@ -57,7 +57,8 @@ Background methodをUnit Testだけに適応
     0. method単位で実行
 
 __Tips__
-> 一括実行の時、実行順番はmethod名で決める。順番を指定するworkaroundは`test_01_firstMethod`、`test_02_secondMethod`のようなフォーマットでmethod名にする
+
+一括実行の時、実行順番はmethod名で決める。順番を指定するworkaroundは`test_01_firstMethod`、`test_02_secondMethod`のようなフォーマットでmethod名にする
 
 ### UI Test Case
 UI操作と画面のtestしたい
@@ -128,7 +129,8 @@ Browserでinspectorのendpointを送信すると、inspector画面が表示さ�
 {% asset_img img-0402-inspector.png inspector %}
 
 __Tips__
-> WIFIは便利ですけど、WIFIない時にUSB経由したい場合以下のツールが使えそうになる。
+
+WIFIは便利ですけど、WIFIない時にUSB経由したい場合以下のツールが使えそうになる。
 * [mobiledevice](https://github.com/imkira/mobiledevice)
 * [usbmuxd](https://github.com/libimobiledevice/usbmuxd)
 

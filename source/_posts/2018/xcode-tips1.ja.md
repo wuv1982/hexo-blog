@@ -9,8 +9,7 @@ tags: [iOS, Xcode]
 しかしXcodeで同じschemeでは再現しない。
 次の日にCarthageをupgradeしたら(0.29.0)問題なくなった。
 
-> libraryのbuild platform検出
-
+__libraryのbuild platform検出__
 ```sh
 otool -l library.a | grep LC_VERSION
 ```
