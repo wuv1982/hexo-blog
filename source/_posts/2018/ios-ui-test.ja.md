@@ -2,7 +2,7 @@
 title: iOS UI Test integrates with WDA(WebDriverAgent)
 lang: ja
 date: 2018-03-07 19:30:10
-tags: iOS, Test, UITest, XCTest, WebDriverAgent, WDA
+tags: [iOS, Test, UITest, XCTest, WebDriverAgent, WDA]
 ---
 
 ## XCTest
