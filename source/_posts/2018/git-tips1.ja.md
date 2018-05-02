@@ -61,3 +61,10 @@ global configを変更
 # It will rewrite all url of "https://github.com" with "${AccessToken}:x-oauth-basic@github.com/" when cloning dependencies.
 git config --global url."${AccessToken}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 ```
+
+## git commands
+
+1. create branch without parent commit
+```sh
+git checkout --orphan name
+```
