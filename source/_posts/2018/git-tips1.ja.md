@@ -68,3 +68,9 @@ git config --global url."${AccessToken}:x-oauth-basic@github.com/".insteadOf "ht
 ```sh
 git checkout --orphan name
 ```
+
+2. fetch from Pull Request
+```sh
+git fetch upstream pull/{ID}/head:{branchName}
+git checkout {branchName}
+```
